@@ -108,7 +108,7 @@ struct promise_type_base {
         constexpr bool await_ready() const noexcept { return false; }
 
         template<typename Child>
-        _STD::coroutine_handle<> await_suspend(_STD::coroutine_handle<Child> h) {
+        _STD::coroutine_handle<> await_suspend(_STD::coroutine_handle<Child> h) noexcept {
             auto& promise = h.promise();
             auto& parent = promise.sync_;
             if (!parent) {
@@ -306,7 +306,12 @@ public:
     // 不能复制
     async(const async&) = delete;
     async& operator=(const async&) = delete;
-    async(async&&) = default;
+
+    async(async&& other) {
+        h_ = std::move(other.h_);
+        skip_destroy_ = other.skip_destroy_;
+        other.skip_destroy_ = true;
+    }
 
     ~async() {
         if (!skip_destroy_) {
@@ -338,7 +343,7 @@ public:
 
 private:
     constexpr int done_count() const noexcept { return 1; }
-    void set_sync_object(const detail::sync_object& sync) { h_.promise().sync = sync; }
+    void set_sync_object(const detail::sync_object& sync) { h_.promise().sync_ = sync; }
     void resume() { h_.resume(); }
     Ret return_value() {
         if constexpr (!std::is_void_v<Ret>) {
