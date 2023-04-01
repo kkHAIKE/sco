@@ -12,6 +12,9 @@
 warning <coroutine> not found
 #endif
 
+#include <memory>
+#include <atomic>
+#include <functional>
 #include <optional>
 
 namespace sco {
