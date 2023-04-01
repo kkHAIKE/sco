@@ -4,10 +4,10 @@
 
 #if __has_include(<coroutine>)
 #include <coroutine>
-#define _STD std
+#define COSTD std
 #elif __has_include(<experimental/coroutine>)
 #include <experimental/coroutine>
-#define _STD std::experimental
+#define COSTD std::experimental
 #else
 warning <coroutine> not found
 #endif
@@ -97,12 +97,12 @@ struct future_caller {
     }
 };
 
-} // detail
+} // namespace detail
 
 namespace detail {
 
 struct promise_type_base {
-    constexpr _STD::suspend_always initial_suspend() const noexcept { return {}; }
+    constexpr COSTD::suspend_always initial_suspend() const noexcept { return {}; }
 
     root_result::opt* root_{};
 
@@ -111,13 +111,13 @@ struct promise_type_base {
         constexpr bool await_ready() const noexcept { return false; }
 
         template<typename Child>
-        _STD::coroutine_handle<> await_suspend(_STD::coroutine_handle<Child> h) noexcept {
+        COSTD::coroutine_handle<> await_suspend(COSTD::coroutine_handle<Child> h) noexcept {
             auto& promise = h.promise();
             auto& parent = promise.sync_;
             if (!parent) {
                 // 自身就是 root，当前已经是最后阶段
                 *promise.root_ = root_result{promise.exception_};
-                return _STD::noop_coroutine();
+                return COSTD::noop_coroutine();
             }
 
             if (--parent->await_done == 0) {
@@ -125,9 +125,9 @@ struct promise_type_base {
                 if (promise.root_) {
                     parent->promise->root_ = promise.root_;
                 }
-                return _STD::coroutine_handle<>::from_address(parent->handler);
+                return COSTD::coroutine_handle<>::from_address(parent->handler);
             }
-            return _STD::noop_coroutine();
+            return COSTD::noop_coroutine();
         }
 
         constexpr void await_resume() const noexcept {}
@@ -142,7 +142,7 @@ struct promise_type_base {
     sync_object sync_;
 
     template<typename Child>
-    sync_object make_sync_object(int done, _STD::coroutine_handle<Child>& h) {
+    sync_object make_sync_object(int done, COSTD::coroutine_handle<Child>& h) {
         auto ret = std::make_shared<promise_shared>();
         ret->await_done = done;
         ret->promise = this;
@@ -158,7 +158,7 @@ struct promise_type_base {
         constexpr bool await_ready() const noexcept { return false; }
 
         template<typename Child>
-        bool await_suspend(_STD::coroutine_handle<Child> h) {
+        bool await_suspend(COSTD::coroutine_handle<Child> h) {
             auto sync = h.promise().make_sync_object(future_caller::done_count(fut) + 1, h);
             future_caller::set_sync_object(fut, sync);
             future_caller::resume(fut);
@@ -178,7 +178,7 @@ struct promise_type_base {
 
     template<typename Future>
     auto await_transform(Future&& fut) {
-        return future_awaiter<Future>{std::move(fut)};
+        return future_awaiter<Future>{std::move(fut)}; // NOLINT(bugprone-move-forwarding-reference)
     }
 };
 
@@ -193,7 +193,7 @@ struct callback_base {
             root_result::opt res;
             promise->promise->root_ = &res;
 
-            _STD::coroutine_handle<>::from_address(promise->handler).resume();
+            COSTD::coroutine_handle<>::from_address(promise->handler).resume();
 
             if (res && res->exception) {
                 std::rethrow_exception(res->exception);
@@ -243,7 +243,7 @@ struct callback_obj<void(), std::tuple<>>: public callback_base {
     }
 };
 
-}
+} // namespace detail
 
 template<typename Sign, typename... Refs>
 constexpr auto cb(Refs&&... refs) {
@@ -256,7 +256,7 @@ namespace detail {
 
 template<typename Obj, typename Ret>
 struct promise_type: public promise_type_base {
-    using handle_type = _STD::coroutine_handle<promise_type>;
+    using handle_type = COSTD::coroutine_handle<promise_type>;
 
     auto get_return_object() {
         return Obj(handle_type::from_promise(*this));
@@ -273,7 +273,7 @@ struct promise_type: public promise_type_base {
 // void 特化
 template<typename Obj>
 struct promise_type<Obj, void>: public promise_type_base {
-    using handle_type = _STD::coroutine_handle<promise_type>;
+    using handle_type = COSTD::coroutine_handle<promise_type>;
 
     auto get_return_object() {
         return Obj(handle_type::from_promise(*this));
@@ -282,7 +282,7 @@ struct promise_type<Obj, void>: public promise_type_base {
     constexpr void return_void() const noexcept {}
 };
 
-} // detail
+} // namespace detail
 
 // 协程的参数如果是引用的话，尽量在下个 co_await 之前保存
 // 可能会在线程切换后变成 悬垂引用
@@ -309,8 +309,9 @@ public:
     // 不能复制
     async(const async&) = delete;
     async& operator=(const async&) = delete;
+    async& operator=(async&&) = delete;
 
-    async(async&& other) {
+    async(async&& other) noexcept {
         h_ = std::move(other.h_);
         skip_destroy_ = other.skip_destroy_;
         other.skip_destroy_ = true;
@@ -350,6 +351,7 @@ private:
     void resume() { h_.resume(); }
     Ret return_value() {
         if constexpr (!std::is_void_v<Ret>) {
+            // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
             return std::move(*h_.promise().value_);
         }
     }
@@ -371,7 +373,7 @@ constexpr auto get_callback_base(T&& v) {
     }
 }
 
-}
+} // namespace detail
 
 // 使用 最晚执行 占有规则
 // 如果有多个回调，一定只有一个会执行到（分支选择回调）
@@ -416,4 +418,4 @@ auto call_with_callback(F&& f, Args&&... args) {
     return future_t(std::move(cb), std::move(bf));
 }
 
-}
+} // namespace sco

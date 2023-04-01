@@ -56,7 +56,7 @@ void assign(Dst& dst, Src&& src) { dst = std::forward<Src>(src); }
 
 template<typename Dst, typename Src,
     std::enable_if_t<is_move_wrapper<Dst>::value>* = nullptr>
-void assign(const Dst& dst, Src&& src) { dst.value = std::move(src); }
+void assign(const Dst& dst, Src&& src) { dst.value = std::move(src); } // NOLINT(bugprone-move-forwarding-reference)
 
 template<typename Dst, typename Src,
     std::enable_if_t<is_unptr_wrapper<Dst>::value>* = nullptr>
@@ -71,7 +71,7 @@ void assign_mutl(T0& t0, T1& t1, std::index_sequence<I...>) {
     (assign(std::get<I>(t0), std::get<I>(t1)), ...);
 }
 
-}
+} // namespace detail
 
 template<typename T>
 constexpr auto wmove(T& v) { return detail::wrapper<T, detail::wrapper_mode::move>(v); }
@@ -82,4 +82,4 @@ constexpr auto wunptr(T& v) { return detail::wrapper<T, detail::wrapper_mode::un
 template<typename T>
 constexpr auto wptr(T& v) { return detail::wrapper<T, detail::wrapper_mode::ptr>(v); }
 
-}
+} // namespace sco
