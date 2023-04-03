@@ -1,6 +1,6 @@
 
 
-#include "sco.hpp"
+#include <sco/sco.hpp>
 
 #include <iostream>
 #include <future>
@@ -19,7 +19,7 @@ void test(int a, int b, const std::function<void(int,int)>& cb) {
 
 sco::async<std::pair<int, int>> some2(int a, int b) {
     int c{}, d{};
-    co_await sco::call_with_callback(&test, a, b, sco::cb<void(int,int)>(c, d));
+    co_await sco::call_with_callback(&test, a, b, sco::cb_tie<void(int,int)>(c, d));
 
     std::cout << "some return" << std::endl;
 
@@ -28,7 +28,7 @@ sco::async<std::pair<int, int>> some2(int a, int b) {
 
 sco::async<> some(int a, int b) {
     int c{}, d{};
-    co_await sco::call_with_callback(&test, a, b, sco::cb<void(int,int)>(c, d));
+    co_await sco::call_with_callback(&test, a, b, sco::cb_tie<void(int,int)>(c, d));
 
     std::cout << c << ',' << d << std::endl;
 

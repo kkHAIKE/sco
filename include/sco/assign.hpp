@@ -5,22 +5,25 @@
 namespace sco {
 namespace detail {
 
-// 默认的赋值规则就是 T& a = b
-// 使用各种包装器更改规则
-
+// An enumeration class used to describe modes of assignments.
 enum class wrapper_mode {
-    move, // 移动包装器 T& a = std::move(b)
-    unptr, // 解脂针包装器 T& a = *b
-    ptr, // 脂针包装器 T* a = &b
+    move, // T& a = std::move(b)
+    unptr, // T& a = *b
+    ptr, // T* a = &b
 };
 
-template<typename T, wrapper_mode m> // 参数是非引用类型 const校验?
+// A wrapper that describes how assignments are made.
+template<typename T, wrapper_mode m>
 struct wrapper {
     using type = T;
     static const auto mode = m;
     T& value;
     constexpr explicit wrapper(T& v): value(v) {}
 };
+
+////////////
+
+// Checks whether T is a wrapper type
 
 template<typename T>
 struct is_wrapper: public std::false_type {};
@@ -48,8 +51,8 @@ struct is_ptr_wrapper<wrapper<T, wrapper_mode::ptr>>: public std::true_type {};
 
 ////////////
 
-// 自适应赋值
-// wrapper 会当作左值引用传递
+// assignment operations
+
 template<typename Dst, typename Src,
     std::enable_if_t<!is_wrapper<std::remove_cv_t<Dst>>::value>* = nullptr>
 void assign(Dst& dst, Src&& src) { dst = std::forward<Src>(src); }
@@ -73,12 +76,18 @@ void assign_mutl(T0& t0, T1& t1, std::index_sequence<I...>) {
 
 } // namespace detail
 
+// Need to use move assignment instead of regular assignment.
+// T& a = std::move(b)
 template<typename T>
 constexpr auto wmove(T& v) { return detail::wrapper<T, detail::wrapper_mode::move>(v); }
 
+// Need to use dereference assignment instead of regular assignment.
+// T& a = *b
 template<typename T>
 constexpr auto wunptr(T& v) { return detail::wrapper<T, detail::wrapper_mode::unptr>(v); }
 
+// Need to use address-of assignment instead of regular assignment.
+// T* a = &b
 template<typename T>
 constexpr auto wptr(T& v) { return detail::wrapper<T, detail::wrapper_mode::ptr>(v); }
 
