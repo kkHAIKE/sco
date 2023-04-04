@@ -4,8 +4,7 @@
 # include <sco/promise.hpp>
 #endif
 
-namespace sco {
-namespace detail {
+namespace sco::detail {
 
 SCO_INLINE bool promise_shared::release_and_check_await_done() {
     return --await_pending == 0;
@@ -52,6 +51,4 @@ SCO_INLINE void promise_type_base::unhandled_exception() {
     exception_ = std::current_exception();
 }
 
-} // namespace detail
-
-} // namespace sco
+} // namespace sco::detail

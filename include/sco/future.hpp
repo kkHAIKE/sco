@@ -9,8 +9,7 @@
 // Ret return_value()
 // std::exception_ptr return_exception()
 
-namespace sco {
-namespace detail {
+namespace sco::detail {
 
 // The following Future-associated classes can be combined arbitrarily.
 
@@ -73,8 +72,7 @@ struct future_return_type<std::shared_ptr<T>> {
     using type = std::invoke_result_t<decltype(future_caller::return_value<T>), T&>;
 };
 
-} // namespace detail
-} // namespace sco
+} // namespace sco::detail
 
 #ifdef SCO_HEADER_ONLY
 # include <sco/future-inl.hpp>

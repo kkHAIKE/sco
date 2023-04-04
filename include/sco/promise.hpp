@@ -6,8 +6,7 @@
 #include <atomic>
 #include <optional>
 
-namespace sco {
-namespace detail {
+namespace sco::detail {
 
 // forward declaration
 struct promise_type_base;
@@ -48,14 +47,12 @@ struct root_result {
 using sync_object = promise_shared::ptr;
 sync_object make_sync_object(int pending, promise_type_base& promise, COSTD::coroutine_handle<> h);
 
-} // namespace detail
-} // namespace sco
+} // namespace sco::detail
 
 // require sync_object defined.
 #include <sco/future.hpp>
 
-namespace sco {
-namespace detail {
+namespace sco::detail {
 
 // Basic implementation of coroutine Promise
 struct promise_type_base {
@@ -155,8 +152,7 @@ struct promise_type<Coro, void>: public promise_type_base {
     constexpr void return_void() const noexcept {}
 };
 
-} // namespace detail
-} // namespace sco
+} // namespace sco::detail
 
 #ifdef SCO_HEADER_ONLY
 # include <sco/promise-inl.hpp>

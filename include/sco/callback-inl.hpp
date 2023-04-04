@@ -4,8 +4,7 @@
 # include <sco/callback.hpp>
 #endif
 
-namespace sco {
-namespace detail {
+namespace sco::detail {
 
 SCO_INLINE void callback_base::resume() {
     if (!promise->release_and_check_await_done()) {
@@ -27,6 +26,4 @@ SCO_INLINE void callback_base::resume() {
     }
 };
 
-} // namespace detail
-
-} // namespace sco
+} // namespace sco::detail
