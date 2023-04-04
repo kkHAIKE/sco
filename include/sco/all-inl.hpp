@@ -4,8 +4,7 @@
 # include <sco/all.hpp>
 #endif
 
-namespace sco {
-namespace detail {
+namespace sco::detail {
 
 SCO_INLINE COSTD::coroutine_handle<> async_handle::handle() {
     return COSTD::coroutine_handle<>::from_address(h_address_);
@@ -35,5 +34,4 @@ SCO_INLINE std::exception_ptr async_handle::return_exception() {
     return promise_->exception_;
 }
 
-} // namespace detail
-} // namespace sco
+} // namespace sco::detail

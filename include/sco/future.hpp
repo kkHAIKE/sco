@@ -13,7 +13,15 @@ namespace sco::detail {
 
 // The following Future-associated classes can be combined arbitrarily.
 
-struct future_base {
+struct future_nocopy {
+    future_nocopy() = default;
+    future_nocopy(future_nocopy&) = delete;
+    future_nocopy& operator=(const future_nocopy&) = delete;
+    future_nocopy(future_nocopy&&) = default;
+    future_nocopy& operator=(future_nocopy&&) = delete;
+};
+
+struct future_base: private future_nocopy {
     constexpr int pending_count() const noexcept { return 1; }
 
     std::exception_ptr exception_;

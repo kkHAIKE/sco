@@ -105,12 +105,6 @@ auto call_with_callback(F&& f, Args&&... args) {
     public:
         future(CB cb, AT&& at, F&& f)
             : cb_(cb), at_(std::move(at)), f_(std::forward<F>(f)) {}
-
-        // no-copytable
-        future(future&) = delete;
-        future& operator=(const future&) = delete;
-        future(future&&) = default;
-        future& operator=(future&&) = delete;
     };
 
     return future(cb, std::move(argsTuple), std::forward<F>(f));
