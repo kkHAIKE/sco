@@ -62,6 +62,7 @@ struct future_caller {
     }
 };
 
+// get return type of future.
 template<typename T>
 struct future_return_type {
     using type = std::invoke_result_t<decltype(future_caller::return_value<T>), T&>;

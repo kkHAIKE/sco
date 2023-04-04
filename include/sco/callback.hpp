@@ -45,7 +45,7 @@ struct callback_tie<void(), std::tuple<>>: public callback_base {
     }
 };
 
-
+// Filtered out callback_base using tuple_cat in combination.
 template<typename T>
 constexpr auto get_callback_base(T&& v) {
     if constexpr (std::is_base_of_v<callback_base, std::remove_cvref_t<T>>) {
@@ -92,6 +92,7 @@ auto call_with_callback(F&& f, Args&&... args) {
         }
 
         void resume() {
+            // call the original function.
             try {
                 std::apply(std::forward<F>(f_), std::move(at_));
             } catch (...) {
@@ -104,6 +105,11 @@ auto call_with_callback(F&& f, Args&&... args) {
     public:
         future(CB cb, AT&& at, F&& f)
             : cb_(cb), at_(std::move(at)), f_(std::forward<F>(f)) {}
+
+        // no-copytable
+        future(future&) = delete;
+        future& operator=(const future&) = delete;
+        future(future&&) = default;
     };
 
     return future(cb, std::move(argsTuple), std::forward<F>(f));

@@ -74,6 +74,4 @@ private:
     friend detail::future_caller;
 };
 
-
-
 } // namespace sco

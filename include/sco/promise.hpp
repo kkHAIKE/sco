@@ -106,6 +106,7 @@ struct promise_type_base {
             return !sync->release_and_check_await_done();
         }
 
+        // return value via co_await.
         Ret await_resume()  {
             auto ex = future_caller::return_exception(fut);
             if (ex) {
@@ -115,9 +116,11 @@ struct promise_type_base {
         }
     };
 
+    // transform the Future to the awaiter via co_await.
     template<typename Future>
-    auto await_transform(Future&& fut) {
-        return future_awaiter<std::remove_reference_t<Future>>{std::move(fut)}; // NOLINT(bugprone-move-forwarding-reference)
+    /* constexpr */ auto await_transform(Future&& fut) {
+        // NOLINTNEXTLINE(bugprone-move-forwarding-reference)
+        return future_awaiter<std::remove_reference_t<Future>>{std::move(fut)};
     }
 };
 
