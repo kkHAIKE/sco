@@ -51,4 +51,8 @@ SCO_INLINE void promise_type_base::unhandled_exception() {
     exception_ = std::current_exception();
 }
 
+SCO_INLINE void promise_type_base::set_sync_object_from_future(const sync_object& sync) {
+    sync_ = sync;
+}
+
 } // namespace sco::detail

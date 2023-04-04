@@ -87,6 +87,7 @@ struct promise_type_base {
 
     // Save the synchronization object passed by the Awaiter.
     sync_object sync_;
+    void set_sync_object_from_future(const sync_object& sync);
 
     // This awaiter connects co_await with the Future.
     template<typename Future>

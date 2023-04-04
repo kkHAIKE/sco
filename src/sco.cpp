@@ -5,3 +5,4 @@
 #include <sco/promise-inl.hpp>
 #include <sco/future-inl.hpp>
 #include <sco/callback-inl.hpp>
+#include <sco/all-inl.hpp>

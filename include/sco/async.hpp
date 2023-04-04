@@ -4,17 +4,21 @@
 
 namespace sco {
 
+namespace detail {
+class async_handle;
+} // namespace detail
+
 // coroutine type
 template<typename Ret=void>
-class async { //: public detail::future_trait<async> {
+class async {
 public:
     using promise_type = detail::promise_type<async, Ret>;
     using handle_type = typename promise_type::handle_type;
 
 private:
     handle_type h_;
-    bool skip_destroy_{};
 
+    friend detail::async_handle;
 public:
 
     explicit async(handle_type&& h): h_(std::move(h)) {}
@@ -26,12 +30,11 @@ public:
 
     async(async&& other) noexcept {
         h_ = std::move(other.h_);
-        skip_destroy_ = other.skip_destroy_;
-        other.skip_destroy_ = true;
+        other.h_ = handle_type{};
     }
 
     ~async() {
-        if (!skip_destroy_) {
+        if (h_) {
             h_.destroy();
         }
     }
@@ -42,7 +45,7 @@ public:
         h_.resume();
 
         if (!res) {
-            skip_destroy_ = true;
+            h_ = handle_type{};
         }
 
         if (res && res->exception) {

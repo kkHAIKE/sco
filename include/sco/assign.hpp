@@ -9,7 +9,7 @@ namespace detail {
 enum class wrapper_mode {
     move, // T& a = std::move(b)
     unptr, // T& a = *b
-    ptr, // T* a = &b
+    // ptr, // T* a = &b
 };
 
 // A wrapper that describes how assignments are made.
@@ -43,11 +43,11 @@ struct is_unptr_wrapper: public std::false_type {};
 template<typename T>
 struct is_unptr_wrapper<wrapper<T, wrapper_mode::unptr>>: public std::true_type {};
 
-template<typename T>
-struct is_ptr_wrapper: public std::false_type {};
+// template<typename T>
+// struct is_ptr_wrapper: public std::false_type {};
 
-template<typename T>
-struct is_ptr_wrapper<wrapper<T, wrapper_mode::ptr>>: public std::true_type {};
+// template<typename T>
+// struct is_ptr_wrapper<wrapper<T, wrapper_mode::ptr>>: public std::true_type {};
 
 ////////////
 
@@ -65,9 +65,9 @@ template<typename Dst, typename Src,
     std::enable_if_t<is_unptr_wrapper<Dst>::value>* = nullptr>
 void assign(const Dst& dst, Src&& src) { if (src) { dst.value = *src; } }
 
-template<typename Dst, typename Src,
-    std::enable_if_t<is_ptr_wrapper<Dst>::value>* = nullptr>
-void assign(const Dst& dst, Src&& src) { dst.value = &src; }
+// template<typename Dst, typename Src,
+//     std::enable_if_t<is_ptr_wrapper<Dst>::value>* = nullptr>
+// void assign(const Dst& dst, Src&& src) { dst.value = &src; }
 
 template<typename T0, typename T1, std::size_t... I>
 void assign_mutl(T0& t0, T1& t1, std::index_sequence<I...>) {
@@ -88,7 +88,7 @@ constexpr auto wunptr(T& v) { return detail::wrapper<T, detail::wrapper_mode::un
 
 // Need to use address-of assignment instead of regular assignment.
 // T* a = &b
-template<typename T>
-constexpr auto wptr(T& v) { return detail::wrapper<T, detail::wrapper_mode::ptr>(v); }
+// template<typename T>
+// constexpr auto wptr(T& v) { return detail::wrapper<T, detail::wrapper_mode::ptr>(v); }
 
 } // namespace sco
