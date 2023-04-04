@@ -110,6 +110,7 @@ auto call_with_callback(F&& f, Args&&... args) {
         future(future&) = delete;
         future& operator=(const future&) = delete;
         future(future&&) = default;
+        future& operator=(future&&) = delete;
     };
 
     return future(cb, std::move(argsTuple), std::forward<F>(f));
