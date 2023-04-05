@@ -12,12 +12,14 @@ auto all(Future&& fut) {
 }
 
 // A special case of iterable container of Future.
-template<typename Iter, typename std::enable_if<std::is_same<
-    typename std::iterator_traits<Iter>::iterator_category,
-    std::input_iterator_tag>::value>::type* = nullptr>
+template<typename Iter, std::enable_if_t<std::is_base_of_v<
+    std::input_iterator_tag,
+    typename std::iterator_traits<Iter>::iterator_category
+>>* = nullptr>
 auto all(Iter begin, Iter end) {
-    class future: protected detail::future_base,
-        protected detail::future_with_value<void>{
+    using Ret = typename detail::future_return_type<typename std::iterator_traits<Iter>::value_type>::type;
+
+    class future: protected detail::future_base {
     private:
         Iter begin_, end_;
 
@@ -48,6 +50,16 @@ auto all(Iter begin, Iter end) {
             return {};
         }
 
+        auto return_value() {
+            if constexpr (!std::is_void_v<Ret>) {
+                std::vector<Ret> ret;
+                for (auto it = begin_; it != end_; ++it) {
+                    ret.push_back(detail::future_caller::return_value(*it));
+                }
+                return ret;
+            }
+        }
+
         friend detail::future_caller;
 
     public:
@@ -71,6 +83,22 @@ struct exception_first {
         ex = detail::future_caller::return_exception(fut);
     }
 };
+
+template<typename T>
+struct future_tuple_is_return_void: public std::false_type {};
+
+template<typename... Future>
+struct future_tuple_is_return_void<std::tuple<Future...>>:
+    public std::conjunction<std::is_void<typename future_return_type<Future>::type>...> {};
+
+template<typename Future>
+auto future_return_tuple(Future& fut) {
+    if constexpr (!std::is_void_v<typename future_return_type<Future>::type>) {
+        return std::make_tuple(future_caller::return_value(fut));
+    } else {
+        return std::tuple<>{};
+    }
+}
 
 } // namespace detail
 
@@ -102,9 +130,11 @@ auto all(Future&&... futs) {
         }
 
         auto return_value() {
-            return std::apply([](auto&&... fut) {
-                return std::make_tuple(detail::future_caller::return_value(fut)...);
-            }, ft_);
+            if constexpr (!detail::future_tuple_is_return_void<FT>::value) {
+                return std::apply([](auto&&... fut) {
+                    return std::tuple_cat(detail::future_return_tuple(fut)...);
+                }, ft_);
+            }
         }
 
         std::exception_ptr return_exception() {
@@ -115,6 +145,8 @@ auto all(Future&&... futs) {
             return ex.ex;
         }
 
+        friend detail::future_caller;
+
     public:
         explicit future(FT&& ft): ft_(std::move(ft)) {}
     };
@@ -122,4 +154,3 @@ auto all(Future&&... futs) {
 }
 
 } // namespace sco
-

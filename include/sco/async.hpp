@@ -63,8 +63,10 @@ private:
     std::exception_ptr return_exception() { return h_.promise().exception_; }
 
     friend detail::future_caller;
+    friend async<void>;
 };
 
+// specialization for void, and any async type can be converted to async<void>
 template<>
 class async<void> {
 public:
