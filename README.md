@@ -17,7 +17,7 @@ AppleClang|10.0.1
 MSVC|2019 (16.8)
 
 ## Features
-* very tiny/simple and no dependencies.
+* very **tiny/simple** and no dependencies.
 * support **all** async frameworks.
 * `sco::call_with_callback` wraps any [async function](#async-function) to make it available for use within a coroutine.
 * `sco::all` will wait for all coroutines to complete.
@@ -56,14 +56,17 @@ more samples in [example.cpp](https://github.com/kkHAIKE/sco/blob/main/example/e
 ## reference
 ## sco::async
 * `sco::async<T>` is a coroutine that returns a value of type `T`.
-* `sco::async<>` can be obtained by converting from any `sco::async<T>`.
+* `sco::async<>` (aka `sco::async<void>`) can be obtained by converting from any `sco::async<T>`.
 * `start_root_in_this_thread` will start the coroutine in the current thread.
 * is a `FutureLike` type.
 
 ## sco::call_with_callback
 * `sco::call_with_callback` wraps any [async function](#async-function) to make it available for use within a coroutine.
-* require `std::co_tie` to tie the callback parameters to the coroutine variables.
-* `std::wmove` use move assignment instead of regular assignment.
+* **require** `std::co_tie` to tie the callback parameters to the coroutine variables.
+* `sco::wmove` use move assignment instead of regular assignment.
+    ```c++
+    std::co_tie<void(NoCopy)> cb{sco::wmove(x)};
+    ```
 * is return a `FutureLike` type.
 
 ## sco::all
