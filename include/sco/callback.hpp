@@ -62,7 +62,7 @@ constexpr auto get_callback_base(T&& v) {
 template<typename Sign, typename... Refs>
 constexpr auto cb_tie(Refs&&... refs) {
     // Requires copying of the rvalue reference.
-    return detail::callback_tie<Sign, std::tuple<Refs...>>({std::forward<Refs>(refs)...});
+    return detail::callback_tie<Sign, std::tuple<Refs...>>(std::tuple<Refs...>{std::forward<Refs>(refs)...});
 }
 
 // Wrap an asynchronous function into a Future for use with co_await.

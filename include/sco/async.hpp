@@ -85,15 +85,14 @@ public:
     async& operator=(const async&) = delete;
     async& operator=(async&&) = delete;
 
-    template<typename Ret>
-    async(async<Ret>&& other) noexcept {
+    template<typename Ret, std::enable_if_t<!std::is_void_v<Ret>>* = nullptr>
+    async(async<Ret>&& other) noexcept { // NOLINT(google-explicit-constructor)
         h_ = other.h_;
         promise_ = &other.h_.promise();
         other.h_ = typename async<Ret>::handle_type{};
     }
 
-    template<>
-    async(async<void>&& other) noexcept;
+    async(async&& other) noexcept;
     ~async();
 
     void start_root_in_this_thread();

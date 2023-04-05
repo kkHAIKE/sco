@@ -138,7 +138,7 @@ struct promise_type: public promise_type_base {
     std::optional<Ret> value_;
 
     // return value via co_return.
-    template<typename T, typename = std::enable_if_t<std::is_convertible_v<Ret, T>>>
+    template<typename T, typename = std::enable_if_t<std::is_convertible_v<T, Ret>>>
     void return_value(T&& v) noexcept {
         value_ = std::forward<T>(v);
     }

@@ -102,8 +102,8 @@ sco::async<> root() {
     // any async type can be converted to sco::async<>.
     std::vector<sco::async<void>> asyncs;
     asyncs.push_back(test1(1, 2, 3));
-    asyncs.push_back(test2(4, 5));
-    asyncs.push_back(test3(6, 7));
+    asyncs.emplace_back(test2(4, 5));
+    asyncs.emplace_back(test3(6, 7));
     co_await sco::all(asyncs.begin(), asyncs.end());
 }
 

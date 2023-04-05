@@ -33,8 +33,7 @@ SCO_INLINE void start_root_in_this_thread(promise_type_base* promise, COSTD::cor
 
 } // namespace detail
 
-template<>
-SCO_INLINE async<void>::async(async<void>&& other) noexcept {
+SCO_INLINE async<void>::async(async&& other) noexcept {
     h_ = other.h_;
     promise_ = other.promise_;
     other.h_ = COSTD::coroutine_handle<>{};
