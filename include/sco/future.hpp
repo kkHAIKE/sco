@@ -15,6 +15,7 @@ namespace sco::detail {
 
 struct future_nocopy {
     future_nocopy() = default;
+    ~future_nocopy() = default;
     future_nocopy(future_nocopy&) = delete;
     future_nocopy& operator=(const future_nocopy&) = delete;
     future_nocopy(future_nocopy&&) = default;

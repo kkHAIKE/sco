@@ -8,8 +8,9 @@ clang-analyzer-*,
 bugprone-*,
 -bugprone-easily-swappable-parameters,
 -modernize-use-trailing-return-type,
--modernize-use-nodiscard
+-modernize-use-nodiscard,
 -misc-non-private-member-variables-in-classes,
+-misc-definitions-in-headers,
 -cppcoreguidelines-avoid-non-const-global-variables,
 -cppcoreguidelines-avoid-magic-numbers,
 -cppcoreguidelines-prefer-member-initializer

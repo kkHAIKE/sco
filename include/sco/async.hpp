@@ -2,14 +2,22 @@
 
 #include <sco/promise.hpp>
 
+#include <functional>
+
 namespace sco {
 
 namespace detail {
-class async_handle;
+
+void start_root_in_this_thread(promise_type_base* promise, COSTD::coroutine_handle<> h,
+    const std::function<void()>& clr);
+
 } // namespace detail
 
+template<typename=void>
+class async;
+
 // coroutine type
-template<typename Ret=void>
+template<typename Ret>
 class async {
 public:
     using promise_type = detail::promise_type<async, Ret>;
@@ -18,7 +26,6 @@ public:
 private:
     handle_type h_;
 
-    friend detail::async_handle;
 public:
 
     explicit async(handle_type&& h): h_(std::move(h)) {}
@@ -40,25 +47,7 @@ public:
     }
 
     void start_root_in_this_thread() {
-        detail::root_result::opt res;
-        h_.promise().set_root_result_from_thread(res);
-        h_.resume();
-
-        if (!res) {
-            h_ = handle_type{};
-        }
-
-        if (res && res->exception) {
-            std::rethrow_exception(res->exception);
-        }
-
-        // if constexpr (!std::is_void_v<Ret>) {
-        //     if (res) {
-        //         return std::move(*h_.promise().value_);
-        //     } else {
-        //         throw std::runtime_error("thread need return but switched");
-        //     }
-        // }
+        detail::start_root_in_this_thread(&h_.promise(), h_, [this] { h_ = handle_type{}; });
     }
 
 private:
@@ -68,14 +57,57 @@ private:
     }
     void resume() { h_.resume(); }
     Ret return_value() {
-        if constexpr (!std::is_void_v<Ret>) {
-            // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-            return std::move(*h_.promise().value_);
-        }
+        // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+        return std::move(*h_.promise().value_);
     }
     std::exception_ptr return_exception() { return h_.promise().exception_; }
 
     friend detail::future_caller;
 };
 
+template<>
+class async<void> {
+public:
+    using promise_type = detail::promise_type<async, void>;
+    using handle_type = typename promise_type::handle_type;
+
+private:
+    COSTD::coroutine_handle<> h_;
+    detail::promise_type_base* promise_{};
+
+public:
+    explicit async(handle_type&& h): h_(h), promise_(&h.promise()) {}
+
+    // no-copytable
+    async(const async&) = delete;
+    async& operator=(const async&) = delete;
+    async& operator=(async&&) = delete;
+
+    template<typename Ret>
+    async(async<Ret>&& other) noexcept {
+        h_ = other.h_;
+        promise_ = &other.h_.promise();
+        other.h_ = typename async<Ret>::handle_type{};
+    }
+
+    template<>
+    async(async<void>&& other) noexcept;
+    ~async();
+
+    void start_root_in_this_thread();
+
+private:
+    constexpr int pending_count() const noexcept { return 1; }
+    void set_sync_object(const detail::sync_object& sync);
+    void resume();
+    constexpr void return_value() const noexcept {}
+    std::exception_ptr return_exception();
+
+    friend detail::future_caller;
+};
+
 } // namespace sco
+
+#ifdef SCO_HEADER_ONLY
+# include <sco/async-inl.hpp>
+#endif
