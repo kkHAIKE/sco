@@ -110,6 +110,7 @@ more samples in [example.cpp](https://github.com/kkHAIKE/sco/blob/main/example/e
 ## limitations
 ### async function
 * function signature must be like `void (*)(Args..., const std::function<void(Ret...)>&, Args...)`.
+* The fact that this callback function is called means that the asynchronous function has completed, thereby transferring control flow.
 * the callback function must be called exactly **once** if no exception is thrown.
 
 ### root coroutine
