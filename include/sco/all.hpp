@@ -25,7 +25,7 @@ auto all(Iter begin, Iter end) {
 
     private:
         int pending_count() {
-            return std::distance(begin_, end_);
+            return static_cast<int>(std::distance(begin_, end_));
         }
 
         void set_sync_object(const detail::sync_object& sync) {
