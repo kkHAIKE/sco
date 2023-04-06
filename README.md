@@ -39,7 +39,7 @@ sco::async<int> plus(int a, int b) {
 // This is the root coroutine called from a thread.
 sc::async<void> root_co(int a, int b) {
     int c = co_await plus(a, b);
-    std::cout << a << " + " << b << " = "<< c << std::endl;
+    std::cout << a << " + " << b << " = " << c << std::endl;
     // void coroutine must call co_return explicitly.
     co_return;
 }
@@ -49,8 +49,17 @@ void thread_func_like_handler() {
     root_co(1, 2).start_root_in_this_thread();
     // This thread may quickly return when the first `co_await` is being called.
 }
-
 ```
+
+Is equivalent to:
+```c++
+void thread_func_like_handler() {
+    plus_async(1, 2, [](int c) {
+        std::cout << "1 + 2 = " << c << std::endl;
+    });
+}
+```
+
 more samples in [example.cpp](https://github.com/kkHAIKE/sco/blob/main/example/example.cpp)
 
 ## reference
