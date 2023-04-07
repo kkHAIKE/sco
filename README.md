@@ -6,7 +6,28 @@ The simplest C++20 coroutine library, specifically designed to solve the problem
 Copy the include folder to your build tree and use a C++20 compiler.
 
 ### Compiled version
-*TODO*. FetchContent
+cmake version >= 3.12
+
+```cmake
+FetchContent_Declare(
+    sco
+    GIT_REPOSITORY https://github.com/kkHAIKE/sco.git
+    GIT_TAG        main
+)
+
+if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.14)
+    FetchContent_MakeAvailable(sco)
+else()
+    FetchContent_GetProperties(sco)
+    if (NOT sco_POPULATED)
+        FetchContent_Populate(sco)
+        add_subdirectory(${sco_SOURCE_DIR} ${sco_BINARY_DIR})
+    endif()
+endif()
+
+# link with your target
+target_link_libraries(your_target sco::sco)
+```
 
 ## Platforms
 compiler|version
@@ -19,6 +40,7 @@ MSVC|2019 (16.8)
 ## Features
 * very **tiny/simple** and no dependencies.
 * support **all** async frameworks.
+* support 3rd-party libraries have implemented the awaiter interface.
 * `sco::call_with_callback` wraps any [async function](#async-function) to make it available for use within a coroutine.
 * `sco::all` will wait for all coroutines to complete.
 
@@ -106,6 +128,7 @@ more samples in [example.cpp](https://github.com/kkHAIKE/sco/blob/main/example/e
     // so the return value is ignored.
     std::cout << ret[1] << std::endl; // 11
     ```
+* can use with 3rd-party libraries have implemented the awaiter interface.
 
 ## limitations
 ### async function

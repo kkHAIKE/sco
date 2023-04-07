@@ -47,27 +47,53 @@ struct future_with_value<void> {
     constexpr void return_value() const noexcept {}
 };
 
+template<typename T>
+struct is_unique_ptr: public std::false_type {};
+
+template<typename T>
+struct is_unique_ptr<std::unique_ptr<T>>: public std::true_type {};
+
 // private member function call mediator
 struct future_caller {
     template<typename T>
     inline static int pending_count(T& x) {
-        return x.pending_count();
+        if constexpr (!is_unique_ptr<T>::value) {
+            return x.pending_count();
+        } else {
+            return x->pending_count();
+        }
     }
     template<typename T>
     inline static void set_sync_object(T& x, const sync_object& sync) {
-        x.set_sync_object(sync);
+        if constexpr (!is_unique_ptr<T>::value) {
+            x.set_sync_object(sync);
+        } else {
+            x->set_sync_object(sync);
+        }
     }
     template<typename T>
     inline static void resume(T& x) {
-        x.resume();
+        if constexpr (!is_unique_ptr<T>::value) {
+            x.resume();
+        } else {
+            x->resume();
+        }
     }
     template<typename T>
     inline static auto return_value(T& x) {
-        return x.return_value();
+        if constexpr (!is_unique_ptr<T>::value) {
+            return x.return_value();
+        } else {
+            return x->return_value();
+        }
     }
     template<typename T>
     inline static std::exception_ptr return_exception(T& x) {
-        return x.return_exception();
+        if constexpr (!is_unique_ptr<T>::value) {
+            return x.return_exception();
+        } else {
+            return x->return_exception();
+        }
     }
 };
 
@@ -78,7 +104,7 @@ struct future_return_type {
 };
 
 template<typename T>
-struct future_return_type<std::shared_ptr<T>> {
+struct future_return_type<std::unique_ptr<T>> {
     using type = std::invoke_result_t<decltype(future_caller::return_value<T>), T&>;
 };
 

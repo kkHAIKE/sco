@@ -54,6 +54,12 @@ sync_object make_sync_object(int pending, promise_type_base& promise, COSTD::cor
 
 namespace sco::detail {
 
+template<typename T, typename=void>
+struct is_awaitable: public std::false_type {};
+
+template<typename T>
+struct is_awaitable<T, std::void_t<decltype(&T::await_ready)>>: public std::true_type {};
+
 // Basic implementation of coroutine Promise
 struct promise_type_base {
     // coroutines should start executing when co_awaited or resumed explicitly."
@@ -118,10 +124,16 @@ struct promise_type_base {
     };
 
     // transform the Future to the awaiter via co_await.
-    template<typename Future>
+    template<typename Future, std::enable_if_t<!is_awaitable<Future>::value>* = nullptr>
     /* constexpr */ auto await_transform(Future&& fut) {
         // NOLINTNEXTLINE(bugprone-move-forwarding-reference)
         return future_awaiter<std::remove_reference_t<Future>>{std::move(fut)};
+    }
+
+    // passthrough the awaiter via co_await.
+    template<typename Awaiter, std::enable_if_t<is_awaitable<Awaiter>::value>* = nullptr>
+    constexpr decltype(auto) await_transform(Awaiter&& fut) {
+        return std::forward<Awaiter>(fut);
     }
 };
 
