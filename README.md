@@ -6,7 +6,7 @@ The simplest C++20 coroutine library, specifically designed to solve the problem
 Copy the include folder to your build tree and use a C++20 compiler.
 
 ### Compiled version
-cmake version >= 3.12
+**require** cmake version >= 3.12
 
 ```cmake
 FetchContent_Declare(

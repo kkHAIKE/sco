@@ -71,6 +71,7 @@ sco::async<> test1(int a, int b, int c) {
     auto d = co_await plus(a, b);
     std::cout << "test1 " << a << " + " << b << " = " << d << std::endl;
 
+    // check call sco::all with only one parameter.
     co_await sco::all(delay(1s));
 
     auto e = co_await mul(c, d);
