@@ -84,6 +84,8 @@ void thread_func_like_handler() {
 
 more samples in [example.cpp](https://github.com/kkHAIKE/sco/blob/main/example/example.cpp)
 
+[httpcache](https://github.com/kkHAIKE/sco/blob/main/example/httpcache/main.cpp) is a more practical example that uses [libhv](https://github.com/ithewei/libhv) and [redis++](https://github.com/sewenew/redis-plus-plus).
+
 ## reference
 ## sco::async
 * `sco::async<T>` is a coroutine that returns a value of type `T`.

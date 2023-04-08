@@ -26,6 +26,7 @@ endif()
 # options
 option(SCO_BUILD_SHARED "Build shared library" OFF)
 option(SCO_BUILD_EXAMPLE "Build example" ${SCO_MASTER_PROJECT})
+option(SCO_BUILD_EXAMPLE_HTTPCACHE "Build example httpcache" OFF)
 
 # source code
 file(GLOB SCO_ALL_HEADERS "include/*.h" "include/*.hpp")
