@@ -16,11 +16,14 @@ endif()
 include(FetchContent)
 
 # sco
-FetchContent_Declare(
-    sco
-    GIT_REPOSITORY https://github.com/kkHAIKE/sco.git
-    GIT_TAG        main
-)
+if (NOT TARGET sco::sco)
+    FetchContent_Declare(
+        sco
+        GIT_REPOSITORY https://github.com/kkHAIKE/sco.git
+        GIT_TAG        main
+    )
+    FetchContent_MakeAvailable(sco)
+endif()
 
 # libhv
 FetchContent_Declare(
@@ -47,6 +50,7 @@ build_external_project(uv_DIST
     https://github.com/libuv/libuv/archive/refs/tags/v1.44.2.tar.gz
     e6e2ba8b4c349a4182a33370bb9be5e23c51b32efb9b9e209d0e8556b73a48da
     # -D LIBUV_BUILD_SHARED=OFF
+    -D BUILD_TESTING=OFF
 )
 find_package(libuv REQUIRED PATHS "${uv_DIST}" NO_DEFAULT_PATH)
 # FILE(COPY "${uv_DIST}/lib/libuv_a.a" DESTINATION "${uv_DIST}/lib/libuv.a")
@@ -65,9 +69,9 @@ FetchContent_Declare(
     URL_HASH SHA256=89cb83b0a23ac5825300c301814eab74aa3cdcfcd12e87d443c2692e367768ba
 )
 
-FetchContent_MakeAvailable(sco hv redispp)
+FetchContent_MakeAvailable(hv redispp)
 
 add_executable(httpcache main.cpp)
 
 target_include_directories(httpcache PRIVATE ${redispp_SOURCE_DIR}/src)
-target_link_libraries(httpcache PRIVATE sco::sco hv_static uv_a redis++::redis++_static)
+target_link_libraries(httpcache PRIVATE sco::sco hv_static redis++::redis++_static uv_a)
