@@ -41,6 +41,7 @@ MSVC|2019 (16.8)
 * very **tiny/simple** and no dependencies.
 * support **all** async frameworks.
 * support 3rd-party libraries have implemented the awaiter interface.
+* very useful for bridging between async/coroutines frameworks and 3rd-party libraries.
 * `sco::call_with_callback` wraps any [async function](#async-function) to make it available for use within a coroutine.
 * `sco::all` will wait for all coroutines to complete.
 
