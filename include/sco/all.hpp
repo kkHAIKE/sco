@@ -100,11 +100,11 @@ auto future_return_tuple(Future& fut) {
 }
 
 template<typename... T>
-struct has_awaitable: public std::disjunction<is_awaitable<T>...> {};
+struct has_awaitable: public std::disjunction<is_awaitable<std::decay_t<T>>...> {};
 
 template<typename T>
 auto wrap_awaitable_with_async(T&& t) {
-    if constexpr (is_awaitable<T>::value) {
+    if constexpr (is_awaitable_v<T>) {
         using Ret = typename awaitable_traits<T>::return_type;
         return std::make_tuple(
             [](T&& t) -> sco::async<Ret> {

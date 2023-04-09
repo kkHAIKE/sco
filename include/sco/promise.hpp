@@ -120,16 +120,17 @@ struct promise_type_base {
     };
 
     // transform the Future to the awaiter via co_await.
-    template<typename Future, std::enable_if_t<!is_awaitable<Future>::value>* = nullptr>
+    template<typename Future, std::enable_if_t<is_future_v<Future>>* = nullptr>
     /* constexpr */ auto await_transform(Future&& fut) {
         // NOLINTNEXTLINE(bugprone-move-forwarding-reference)
         return future_awaiter<std::remove_reference_t<Future>>{std::move(fut)};
     }
 
-    // passthrough the awaiter via co_await.
-    template<typename Awaiter, std::enable_if_t<is_awaitable<Awaiter>::value>* = nullptr>
-    constexpr decltype(auto) await_transform(Awaiter&& fut) {
-        return std::forward<Awaiter>(fut);
+    // passthrough the awaitable via co_await.
+    template<typename Awaitable, std::enable_if_t<
+        is_awaitable_v<Awaitable> && !is_future_v<Awaitable>>* = nullptr>
+    constexpr decltype(auto) await_transform(Awaitable&& aw) {
+        return std::forward<Awaitable>(aw);
     }
 };
 

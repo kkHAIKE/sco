@@ -49,23 +49,23 @@ struct future_with_value<void> {
 
 // private member function call mediator
 struct future_caller {
-    template<typename T>
+    template<typename T, typename=std::void_t<decltype(&T::pending_count)>>
     inline static int pending_count(T& x) {
         return x.pending_count();
     }
-    template<typename T>
+    template<typename T, typename=std::void_t<decltype(&T::set_sync_object)>>
     inline static void set_sync_object(T& x, const sync_object& sync) {
         x.set_sync_object(sync);
     }
-    template<typename T>
+    template<typename T, typename=std::void_t<decltype(&T::resume)>>
     inline static void resume(T& x) {
         x.resume();
     }
-    template<typename T>
+    template<typename T, typename=std::void_t<decltype(&T::return_value)>>
     inline static auto return_value(T& x) {
         return x.return_value();
     }
-    template<typename T>
+    template<typename T, typename=std::void_t<decltype(&T::return_exception)>>
     inline static std::exception_ptr return_exception(T& x) {
         return x.return_exception();
     }
@@ -84,8 +84,14 @@ struct is_future<T, std::void_t<
 >>: public std::true_type {};
 
 template<typename T>
-struct future_traits {
-    using return_type = std::invoke_result_t<decltype(future_caller::return_value<T>), T&>;
+constexpr bool is_future_v = is_future<std::decay_t<T>>::value;
+
+template<typename T, typename=void>
+struct future_traits;
+
+template<typename T>
+struct future_traits<T, std::enable_if_t<is_future_v<T>>> {
+    using return_type = decltype(future_caller::return_value(std::declval<T&>()));
 };
 
 } // namespace sco::detail
