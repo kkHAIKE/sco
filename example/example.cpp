@@ -60,10 +60,22 @@ sco::async<> delay(const std::chrono::milliseconds& ms) {
 }
 
 // Some third-party libraries have implemented the awaiter interface.
-struct other_awaiter_return_99 {
+template<int N>
+struct int_awaiter {
     constexpr bool await_ready() const noexcept { return true; }
     constexpr void await_suspend(COSTD::coroutine_handle<> h) const noexcept {}
-    constexpr int await_resume() const noexcept { return 99; }
+    constexpr int await_resume() const noexcept { return N; }
+};
+
+// type return awaiter
+template<int N>
+struct return_int_awaiter {
+    constexpr int_awaiter<N> operator co_await() const noexcept { return {}; }
+};
+
+template<int N>
+struct global_return_int_awaiter {
+    friend constexpr int_awaiter<N> operator co_await(global_return_int_awaiter&&) noexcept { return {}; }
 };
 
 // (a * b) * c
@@ -89,7 +101,9 @@ sco::async<int> test2(int a, int b) {
         sco::call_with_callback(&delay_async, 1s, sco::cb_tie<void()>()),
         mul(a, b),
         // three-party awaiter can be used in sco::all.
-        other_awaiter_return_99{});
+        int_awaiter<77>{},
+        return_int_awaiter<88>{},
+        global_return_int_awaiter<99>{});
     std::cout << "test2 " << a << " + " << b << " = " << std::get<0>(r) << std::endl;
     // the 2nd `FutureLike` return type is void,
     // so the return value is ignored.
