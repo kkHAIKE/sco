@@ -113,6 +113,12 @@ private:
 
 } // namespace sco
 
+// support 3rd party coroutine framework.
+template<typename Ret>
+inline auto operator co_await(sco::async<Ret>&& a) {
+    return sco::detail::promise_type_base::future_awaiter<sco::async<Ret>>{std::move(a)};
+}
+
 #ifdef SCO_HEADER_ONLY
 # include <sco/async-inl.hpp>
 #endif

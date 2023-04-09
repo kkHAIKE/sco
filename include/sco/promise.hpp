@@ -47,7 +47,16 @@ struct root_result {
 // The synchronization object passed between Awaiter and Future
 // may have additional supplements in the future.
 using sync_object = promise_shared::ptr;
-sync_object make_sync_object(int pending, promise_type_base& promise, const COSTD::coroutine_handle<>& h);
+sync_object make_sync_object_(int pending, promise_type_base* promise, const COSTD::coroutine_handle<>& h);
+
+template<typename T>
+auto make_sync_object(int pending, T* promise, const COSTD::coroutine_handle<>& h) {
+    if constexpr (std::is_base_of_v<promise_type_base, T>) {
+        return make_sync_object_(pending, promise, h);
+    } else {
+        return make_sync_object_(pending, nullptr, h);
+    }
+}
 
 } // namespace sco::detail
 
@@ -101,7 +110,7 @@ struct promise_type_base {
 
         template<typename Child>
         bool await_suspend(COSTD::coroutine_handle<Child> h) {
-            auto sync = make_sync_object(future_caller::pending_count(fut) + 1, h.promise(), h);
+            auto sync = make_sync_object(future_caller::pending_count(fut) + 1, &h.promise(), h);
             future_caller::set_sync_object(fut, sync);
             future_caller::resume(fut);
 
