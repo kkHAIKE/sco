@@ -1,6 +1,7 @@
 #pragma once
 
 #include <sco/common.h>
+#include <sco/awaiter.hpp>
 
 #include <memory>
 #include <atomic>
@@ -27,7 +28,8 @@ struct promise_shared {
     void *handle_address{};
     COSTD::coroutine_handle<> handle();
 
-    promise_shared(int pending, promise_type_base* promise, COSTD::coroutine_handle<> h);
+    constexpr promise_shared(int pending, promise_type_base* promise, void *h)
+        : await_pending(pending), promise(promise), handle_address(h) {}
 };
 
 // Used in a thread context to obtain additional results
@@ -45,7 +47,7 @@ struct root_result {
 // The synchronization object passed between Awaiter and Future
 // may have additional supplements in the future.
 using sync_object = promise_shared::ptr;
-sync_object make_sync_object(int pending, promise_type_base& promise, COSTD::coroutine_handle<> h);
+sync_object make_sync_object(int pending, promise_type_base& promise, const COSTD::coroutine_handle<>& h);
 
 } // namespace sco::detail
 
@@ -53,12 +55,6 @@ sync_object make_sync_object(int pending, promise_type_base& promise, COSTD::cor
 #include <sco/future.hpp>
 
 namespace sco::detail {
-
-template<typename T, typename=void>
-struct is_awaitable: public std::false_type {};
-
-template<typename T>
-struct is_awaitable<T, std::void_t<decltype(&T::await_ready)>>: public std::true_type {};
 
 // Basic implementation of coroutine Promise
 struct promise_type_base {
@@ -74,7 +70,7 @@ struct promise_type_base {
         constexpr bool await_ready() const noexcept { return false; }
 
         // Returning to the parent coroutine handle can automatically resume the parent coroutine.
-        COSTD::coroutine_handle<> await_suspend_(COSTD::coroutine_handle<> h, promise_type_base& promise);
+        COSTD::coroutine_handle<> await_suspend_(const COSTD::coroutine_handle<>& h, promise_type_base& promise);
 
         // By instantiating the Promise class with a template, the promise function can be called.
         template<typename Child>
@@ -98,7 +94,7 @@ struct promise_type_base {
     // This awaiter connects co_await with the Future.
     template<typename Future>
     struct future_awaiter {
-        using Ret = typename future_return_type<Future>::type;
+        using Ret = typename future_traits<Future>::return_type;
         Future fut;
 
         constexpr bool await_ready() const noexcept { return false; }

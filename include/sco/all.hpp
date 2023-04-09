@@ -16,7 +16,7 @@ template<typename Iter, std::enable_if_t<std::is_base_of_v<
     typename std::iterator_traits<Iter>::iterator_category
 >>* = nullptr>
 auto all(Iter begin, Iter end) {
-    using Ret = typename detail::future_return_type<typename std::iterator_traits<Iter>::value_type>::type;
+    using Ret = typename detail::future_traits<typename std::iterator_traits<Iter>::value_type>::return_type;
 
     class future: protected detail::future_base {
     private:
@@ -88,11 +88,11 @@ struct future_tuple_is_return_void: public std::false_type {};
 
 template<typename... Future>
 struct future_tuple_is_return_void<std::tuple<Future...>>:
-    public std::conjunction<std::is_void<typename future_return_type<Future>::type>...> {};
+    public std::conjunction<std::is_void<typename future_traits<Future>::return_type>...> {};
 
 template<typename Future>
 auto future_return_tuple(Future& fut) {
-    if constexpr (!std::is_void_v<typename future_return_type<Future>::type>) {
+    if constexpr (!std::is_void_v<typename future_traits<Future>::return_type>) {
         return std::make_tuple(future_caller::return_value(fut));
     } else {
         return std::tuple<>{};
@@ -103,14 +103,14 @@ template<typename... T>
 struct has_awaitable: public std::disjunction<is_awaitable<T>...> {};
 
 template<typename T>
-auto wrap_awaiter_with_async(T&& t) {
+auto wrap_awaitable_with_async(T&& t) {
     if constexpr (is_awaitable<T>::value) {
-        using Ret = std::invoke_result_t<decltype(&T::await_resume), T>;
-        return std::make_tuple(std::make_unique<sco::async<Ret>>(
+        using Ret = typename awaitable_traits<T>::return_type;
+        return std::make_tuple(
             [](T&& t) -> sco::async<Ret> {
                 co_return co_await std::forward<T>(t);
             // can not use capture list in lambda
-            }(std::forward<T>(t))));
+            }(std::forward<T>(t)));
     } else {
         return std::tuple<T&&>(std::forward<T>(t));
     }
@@ -165,7 +165,7 @@ public:
 template<typename... Future>
 auto all(Future&&... futs) {
     if constexpr (detail::has_awaitable<Future...>::value) {
-        auto futTuple = std::tuple_cat(detail::wrap_awaiter_with_async(std::forward<Future>(futs))...);
+        auto futTuple = std::tuple_cat(detail::wrap_awaitable_with_async(std::forward<Future>(futs))...);
         return detail::all_future<decltype(futTuple)>(std::move(futTuple));
     } else {
         std::tuple<Future&&...> futTuple{std::forward<Future>(futs)...};

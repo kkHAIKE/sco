@@ -14,18 +14,15 @@ SCO_INLINE COSTD::coroutine_handle<> promise_shared::handle() {
     return COSTD::coroutine_handle<>::from_address(handle_address);
 }
 
-SCO_INLINE promise_shared::promise_shared(int pending, promise_type_base* promise, COSTD::coroutine_handle<> h)
-    : await_pending(pending), promise(promise), handle_address(h.address()) {}
-
 SCO_INLINE COSTD::coroutine_handle<> root_result::root_handle() {
     return COSTD::coroutine_handle<>::from_address(root_handle_address);
 }
 
-SCO_INLINE sync_object make_sync_object(int pending, promise_type_base& promise, COSTD::coroutine_handle<> h) {
-    return std::make_shared<promise_shared>(pending, &promise, h);
+SCO_INLINE sync_object make_sync_object(int pending, promise_type_base& promise, const COSTD::coroutine_handle<>& h) {
+    return std::make_shared<promise_shared>(pending, &promise, h.address());
 }
 
-SCO_INLINE COSTD::coroutine_handle<> promise_type_base::final_awaiter::await_suspend_(COSTD::coroutine_handle<> h, promise_type_base& promise) {
+SCO_INLINE COSTD::coroutine_handle<> promise_type_base::final_awaiter::await_suspend_(const COSTD::coroutine_handle<>& h, promise_type_base& promise) {
     auto& parent = promise.sync_;
     if (!parent) {
         // If the current coroutine is the root coroutine,

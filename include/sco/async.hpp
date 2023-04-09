@@ -8,16 +8,13 @@ namespace sco {
 
 namespace detail {
 
-void start_root_in_this_thread(promise_type_base* promise, COSTD::coroutine_handle<> h,
+void start_root_in_this_thread(promise_type_base* promise, const COSTD::coroutine_handle<>& h,
     const std::function<void()>& clr);
 
 } // namespace detail
 
-template<typename=void>
-class async;
-
 // coroutine type
-template<typename Ret>
+template<typename Ret=void>
 class async {
 public:
     using promise_type = detail::promise_type<async, Ret>;
@@ -33,11 +30,12 @@ public:
     // no-copytable
     async(const async&) = delete;
     async& operator=(const async&) = delete;
-    async& operator=(async&&) = delete;
 
-    async(async&& other) noexcept {
+    async(async&& other) noexcept { operator=(std::move(other)); }
+    async& operator=(async&& other) noexcept {
         h_ = std::move(other.h_);
         other.h_ = handle_type{};
+        return *this;
     }
 
     ~async() {
@@ -83,16 +81,22 @@ public:
     // no-copytable
     async(const async&) = delete;
     async& operator=(const async&) = delete;
-    async& operator=(async&&) = delete;
 
     template<typename Ret, std::enable_if_t<!std::is_void_v<Ret>>* = nullptr>
     async(async<Ret>&& other) noexcept { // NOLINT(google-explicit-constructor)
+        operator=(std::move(other));
+    }
+    template<typename Ret, std::enable_if_t<!std::is_void_v<Ret>>* = nullptr>
+    async& operator=(async<Ret>&& other) noexcept {
         h_ = other.h_;
         promise_ = &other.h_.promise();
         other.h_ = typename async<Ret>::handle_type{};
+        return *this;
     }
 
-    async(async&& other) noexcept;
+    async(async&& other) noexcept { operator=(std::move(other)); }
+    async& operator=(async&& other) noexcept;
+
     ~async();
 
     void start_root_in_this_thread();

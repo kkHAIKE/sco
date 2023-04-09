@@ -7,7 +7,7 @@
 namespace sco {
 namespace detail {
 
-SCO_INLINE void start_root_in_this_thread(promise_type_base* promise, COSTD::coroutine_handle<> h,
+SCO_INLINE void start_root_in_this_thread(promise_type_base* promise, const COSTD::coroutine_handle<>& h,
     const std::function<void()>& clr) {
     detail::root_result::opt res;
     promise->set_root_result_from_thread(res);
@@ -33,10 +33,11 @@ SCO_INLINE void start_root_in_this_thread(promise_type_base* promise, COSTD::cor
 
 } // namespace detail
 
-SCO_INLINE async<void>::async(async&& other) noexcept {
+SCO_INLINE async<void>& async<void>::operator=(async&& other) noexcept {
     h_ = other.h_;
     promise_ = other.promise_;
     other.h_ = COSTD::coroutine_handle<>{};
+    return *this;
 }
 
 SCO_INLINE async<void>::~async() {
