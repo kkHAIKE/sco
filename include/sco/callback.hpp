@@ -40,9 +40,7 @@ template<>
 struct callback_tie<void(), std::tuple<>>: public callback_base {
     constexpr explicit callback_tie(std::tuple<>&&) {}
 
-    void operator()() {
-        resume();
-    }
+    void operator()() { resume(); }
 };
 
 // Filtered out callback_base using tuple_cat in combination.

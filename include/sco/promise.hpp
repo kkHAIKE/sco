@@ -95,7 +95,7 @@ struct promise_type_base {
     template<typename Future>
     struct future_awaiter {
         using Ret = typename future_traits<Future>::return_type;
-        Future fut;
+        Future&& fut;
 
         constexpr bool await_ready() const noexcept { return false; }
 
@@ -119,18 +119,16 @@ struct promise_type_base {
         }
     };
 
-    // transform the Future to the awaiter via co_await.
-    template<typename Future, std::enable_if_t<is_future_v<Future>>* = nullptr>
-    /* constexpr */ auto await_transform(Future&& fut) {
-        // NOLINTNEXTLINE(bugprone-move-forwarding-reference)
-        return future_awaiter<std::remove_reference_t<Future>>{std::move(fut)};
-    }
-
-    // passthrough the awaitable via co_await.
-    template<typename Awaitable, std::enable_if_t<
-        is_awaitable_v<Awaitable> && !is_future_v<Awaitable>>* = nullptr>
+    template<typename Awaitable>
     constexpr decltype(auto) await_transform(Awaitable&& aw) {
-        return std::forward<Awaitable>(aw);
+        if constexpr (is_future_v<Awaitable>) {
+            return future_awaiter<Awaitable>{std::forward<Awaitable>(aw)};
+        } else if constexpr (is_awaitable_v<Awaitable>) {
+            // passthrough the awaitable via co_await.
+            return std::forward<Awaitable>(aw);
+        } else {
+            static_assert(!std::is_same_v<Awaitable, Awaitable>, "Awaitable type is not supported.");
+        }
     }
 };
 

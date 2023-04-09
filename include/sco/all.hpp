@@ -165,11 +165,11 @@ public:
 template<typename... Future>
 auto all(Future&&... futs) {
     if constexpr (detail::has_awaitable<Future...>::value) {
-        auto futTuple = std::tuple_cat(detail::wrap_awaitable_with_async(std::forward<Future>(futs))...);
-        return detail::all_future<decltype(futTuple)>(std::move(futTuple));
+        return detail::all_future(
+            std::tuple_cat(detail::wrap_awaitable_with_async(std::forward<Future>(futs))...));
     } else {
-        std::tuple<Future&&...> futTuple{std::forward<Future>(futs)...};
-        return detail::all_future<decltype(futTuple)>(std::move(futTuple));
+        return detail::all_future(
+            std::forward_as_tuple(std::forward<Future>(futs)...));
     }
 }
 
