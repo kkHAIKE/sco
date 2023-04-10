@@ -65,3 +65,19 @@ endif()
 if (SCO_BUILD_EXAMPLE)
     add_subdirectory(example)
 endif()
+
+# install
+if (SCO_MASTER_PROJECT)
+    install(DIRECTORY include/ DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
+    install(TARGETS sco sco_header_only
+        EXPORT scoConfig
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+        INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+
+    install(EXPORT scoConfig
+        FILE sco-config.cmake
+        NAMESPACE sco::
+        DESTINATION lib/cmake/sco)
+endif()
