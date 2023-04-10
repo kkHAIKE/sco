@@ -109,7 +109,7 @@ auto wrap_awaitable_with_async(T&& t) {
         return std::make_tuple(
             [](T&& t) -> sco::async<Ret> {
                 co_return co_await std::forward<T>(t);
-            // can not use capture list in lambda
+            // can not use capture list in lambda coroutines within the thread context.
             }(std::forward<T>(t)));
     } else {
         return std::tuple<T&&>(std::forward<T>(t));

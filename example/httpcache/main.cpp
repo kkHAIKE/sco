@@ -59,6 +59,7 @@ int main() {
     hv::HttpService router;
 
     router.GET("/", [](const HttpRequestPtr& req, const HttpResponseWriterPtr& writer) {
+        // It is better to pass coroutine parameters by value.
         [](HttpRequestPtr req, HttpResponseWriterPtr writer) -> sco::async<> {
             // read from cache first
             auto val = co_await redis_get_async(req->FullPath());
@@ -80,9 +81,7 @@ int main() {
             auto resp = co_await client_async(req2);
 
             // write response content, call it later.
-            // because finish coroutine has no co_awit,
-            // so we can use lvalue reference as parameter.
-            auto write_resp = [](const HttpResponseWriterPtr& writer, const decltype(resp)& resp) -> sco::async<> {
+            auto write_resp = [&]() -> sco::async<> {
                 writer->Begin();
                 if (resp) {
                     resp->headers.erase("Transfer-Encoding");
@@ -95,21 +94,22 @@ int main() {
                 writer->End();
                 // must call co_return explicitly
                 co_return;
-            }(writer, resp);
+            }; // Do not call the lambda immediately here and return the coroutine,
+            // it should be called at the co_await location instead.
 
             // write html to cache and write response
             if (resp && resp->status_code == HTTP_STATUS_OK && resp->ContentType() == TEXT_HTML) {
                 co_await sco::all(
                     redis_set_async(req->FullPath(), resp->body, std::chrono::seconds(30)),
-                    write_resp);
+                    write_resp());
                 co_return;
             }
 
-            co_await write_resp;
+            co_await write_resp();
 
             // must call co_return explicitly
             co_return;
-        // can not use capture list in lambda
+        // can not use capture list in lambda coroutines within the thread context.
         }(req, writer).start_root_in_this_thread();
     });
 
