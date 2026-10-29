@@ -154,5 +154,9 @@ more samples in [example.cpp](https://github.com/kkHAIKE/sco/blob/main/example/e
     }
     ```
 
+## Support
+
+If you find this project useful, consider [sponsoring my open-source work](https://github.com/sponsors/kkHAIKE).
+
 ## License
 MIT
